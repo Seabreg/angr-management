@@ -330,12 +330,23 @@ class MainWindow(QMainWindow):
         self.workspace.instance.add_job(LoadTargetJob(target))
         self.workspace.instance.set_image(img_name)
 
+    def open_trace(self):
+        trace_path = self._open_mainfile_dialog()
+        self.load_trace(trace_path)
+
     def load_file(self, file_path):
         if os.path.isfile(file_path):
             if file_path.endswith(".adb"):
                 self.load_database(file_path)
             else:
                 self.workspace.instance.add_job(LoadBinaryJob(file_path))
+
+    def load_trace(self, trace_path):
+        if os.path.isfile(trace_path):
+            with open(trace_file, 'r') as f:
+                trace = json.load(f)
+
+        pass
 
     def save_database(self):
         if self.workspace.instance.database_path is None:

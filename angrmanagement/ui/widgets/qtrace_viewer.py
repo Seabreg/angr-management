@@ -2,13 +2,26 @@ from PySide2.QtWidgets import QWidget, QHBoxLayout, QGraphicsScene, \
         QGraphicsView, QGraphicsItemGroup
 from PySide2.QtGui import QPen, QBrush, QLinearGradient, QPixmap, \
         QColor, QPainter, QFont
-from PySide2.QtCore import Qt, QRectF, QSize
+from PySide2.QtCore import Qt, QRectF, QSize, QPoint
 
 import logging
 l = logging.getLogger(name=__name__)
-l.setLevel('DEBUG')
+# l.setLevel('DEBUG')
+
 class QTraceViewer(QWidget):
     TAG_SPACING = 50
+    LEGEND_X = -50
+    LEGEND_Y = 0
+    LEGEND_WIDTH = 10
+
+    TRACE_FUNC_X = 0
+    TRACE_FUNC_Y = 0
+    TRACE_FUNC_WIDTH = 50
+    TRACE_FUNC_MINHEIGHT = 1000
+
+    MARK_X = LEGEND_X
+    MARK_WIDTH = TRACE_FUNC_X - LEGEND_X + TRACE_FUNC_WIDTH
+    MARK_HEIGHT = 5
     def __init__(self, workspace, disasm_view, parent=None):
         super().__init__(parent)
         self.workspace = workspace
@@ -19,21 +32,9 @@ class QTraceViewer(QWidget):
         self._trace_stat = None
         self.mark = None
         self.selected_ins = None
+
+
         self._init_widgets()
-
-        self.LEGEND_X = -50
-        self.LEGEND_Y = 0
-        self.LEGEND_WIDTH = 10
-
-        self.TRACE_FUNC_X = 0
-        self.TRACE_FUNC_Y = 0
-        self.TRACE_FUNC_WIDTH = 50
-        self.TRACE_FUNC_MINHEIGHT = 1000
-
-        self.MARK_X = self.LEGEND_X
-        self.MARK_WIDTH = self.TRACE_FUNC_X - self.LEGEND_X + self.TRACE_FUNC_WIDTH
-        self.MARK_HEIGHT = 5
-
 
     def _init_widgets(self):
         self.view = QGraphicsView()
@@ -56,7 +57,7 @@ class QTraceViewer(QWidget):
         pen = QPen(Qt.transparent)
 
         gradient = QLinearGradient(self.LEGEND_X, self.LEGEND_Y,
-                self.LEGEND_X, self.LEGEND_Y + self.height)
+                self.LEGEND_X, self.LEGEND_Y + self.legend_height)
         gradient.setColorAt(0.0, Qt.red)
         gradient.setColorAt(0.4, Qt.yellow)
         gradient.setColorAt(0.6, Qt.green)
@@ -64,7 +65,7 @@ class QTraceViewer(QWidget):
         brush = QBrush(gradient)
 
         self.legend = self.scene.addRect(self.LEGEND_X, self.LEGEND_Y,
-                self.LEGEND_WIDTH, self.height, pen, brush)
+                self.LEGEND_WIDTH, self.legend_height, pen, brush)
 
     def mark_instruction(self, addr):
         self.selected_ins = addr
@@ -82,7 +83,7 @@ class QTraceViewer(QWidget):
 
     def _get_mark_color(self, i, total):
         return self.legend_img.pixelColor(self.LEGEND_WIDTH / 2,
-                self.height * i / total + 1)
+                self.legend_height * i / total + 1)
 
     def _get_mark_y(self, i, total):
         return self.TRACE_FUNC_Y + self.trace_func_unit_height * i
@@ -139,9 +140,49 @@ class QTraceViewer(QWidget):
         else:
             self.trace_func_unit_height = self.TRACE_FUNC_MINHEIGHT / self._trace_stat.count
             show_func_tag = True
-        self.height = self._trace_stat.count * self.trace_func_unit_height
+        self.legend_height = self._trace_stat.count * self.trace_func_unit_height
         self._show_trace_func(show_func_tag)
         self._show_legend()
         self._set_mark_color()
         if self.selected_ins is not None:
             self.mark_instruction(self.selected_ins)
+
+    def _at_legend(self, pos):
+        x = pos.x()
+        y = pos.y()
+        if x > self.TRACE_FUNC_X and \
+                x < self.TRACE_FUNC_X + self.TRACE_FUNC_WIDTH and \
+                y > self.TRACE_FUNC_Y and \
+                y < self.TRACE_FUNC_Y + self.legend_height:
+            return True
+        else:
+            return False
+
+    def _to_logical_pos(self, pos):
+        x_offset = self.view.horizontalScrollBar().value()
+        y_offset = self.view.verticalScrollBar().value()
+        return QPoint(pos.x() + x_offset, pos.y() + y_offset)
+
+
+    def _get_position(self, y):
+        y_relative = y - self.legend_height
+        return y_relative // self.trace_func_unit_height
+
+    def _get_bbl_from_y(self, y):
+        position = self._get_position(y)
+        return self._trace_stat.get_bbl_from_position(position)
+
+    def _get_func_from_y(self, y):
+        position = self._get_position(y)
+        func_name = self._trace_stat.get_func_from_position(position)
+        return self.workspace.instance.cfg.kb.functions.function(name=func_name)
+
+    def mousePressEvent(self, event):
+        button = event.button()
+        pos = self._to_logical_pos(event.pos())
+        if button == Qt.LeftButton and self._at_legend(pos):
+            func = self._get_func_from_y(pos.y())
+            bbl_addr = self._get_bbl_from_y(pos.y())
+
+            self.workspace.on_function_selected(func)
+            self.disasm_view.toggle_instruction_selection(bbl_addr)

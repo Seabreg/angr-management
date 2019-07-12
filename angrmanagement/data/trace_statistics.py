@@ -97,3 +97,10 @@ class TraceStatistics:
 
     def get_positions(self, addr):
         return self._positions[addr]
+
+
+    def get_bbl_from_position(self, position):
+        return self.trace_func[position][0]
+
+    def get_func_from_position(self, position):
+        return self.trace_func[position][2]

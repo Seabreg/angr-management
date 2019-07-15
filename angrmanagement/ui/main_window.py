@@ -93,10 +93,7 @@ class MainWindow(QMainWindow):
             self.load_file(file_to_open)
             self._file_menu.action_by_key('load_trace').enable()
 
-        # self.load_file('/home/tiffanyb/Angr/test/hamlin.bin')
         self._file_menu.action_by_key('load_trace').enable()
-        # import time; time.sleep(5)
-        # self.load_trace('/home/tiffanyb/Angr/test/trace')
 
     def sizeHint(self, *args, **kwargs):
         return QSize(1200, 800)

@@ -221,7 +221,6 @@ class QInstruction(QGraphObject):
         if self._trace is not None:
             self._width += self.GRAPH_OPERAND_SPACING + self.GRAPH_TRACE_LEGEND_WIDTH
 
-
     def _paint_highlight(self, painter):
         r, g, b = self.insn_backcolor
 

@@ -136,7 +136,6 @@ class Instance:
             store = ana.get_dl()._state_store
             pickle.dump({'store': store, 'pickled': pickled}, f)
 
-
     @staticmethod
     def from_file(loc):
         with open(loc, 'rb') as f:

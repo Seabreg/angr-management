@@ -49,6 +49,7 @@ ENTRIES = [
     CE('disasm_view_antitarget_addr_color', QColor, QColor(0xff, 0, 0)),
     CE('disasm_view_node_background_color', QColor, QColor(0xfa, 0xfa, 0xfa)),
     CE('disasm_view_node_border_color', QColor, QColor(0xf0, 0xf0, 0xf0)),
+    CE('trace_func_font', QFont, None)
 ]
 
 
@@ -86,6 +87,8 @@ class ConfigurationManager:
         self.code_font_height = font_metrics.height()
         self.code_font_width = font_metrics.width('A')
         self.code_font_ascent = font_metrics.ascent()
+
+        self.trace_func_font = QFont("Source Code Pro", 7)
 
     def __getattr__(self, item):
 

@@ -52,7 +52,6 @@ class QInstruction(QGraphObject):
         self._comment = None
         self._comment_width = None
         self._trace = None
-        self._trace_width = None
 
         self._init_widgets()
 
@@ -220,7 +219,8 @@ class QInstruction(QGraphObject):
             self._width += self.GRAPH_COMMENT_STRING_SPACING + self._string_width
 
         if self._trace is not None:
-            self._width += self.GRAPH_OPERAND_SPACING + self._trace_width
+            self._width += self.GRAPH_OPERAND_SPACING + self.GRAPH_TRACE_LEGEND_WIDTH
+
 
     def _paint_highlight(self, painter):
         r, g, b = self.insn_backcolor
@@ -238,20 +238,17 @@ class QInstruction(QGraphObject):
 
         # trace legend
         if self.workspace.instance.trace is not None:
-            x_start = x - self.GRAPH_TRACE_LEGEND_WIDTH - self.GRAPH_TRACE_LEGEND_SPACING
-            self._trace = True
-            self._trace_width = self.GRAPH_TRACE_LEGEND_WIDTH
-            count = self.workspace.instance.trace.get_count(self.insn.addr)
-            # l.info('Addr: %x, Count: %d' % (self.insn.addr, count))
+            self._trace = self.workspace.instance.trace
+            count = self._trace.get_count(self.insn.addr)
 
             if count > 0:
+                x_start = x - self.GRAPH_TRACE_LEGEND_WIDTH - self.GRAPH_TRACE_LEGEND_SPACING
                 if count > self.GRAPH_TRACE_LEGEND_WIDTH:
                     jump = count / self.GRAPH_TRACE_LEGEND_WIDTH
                     i_width = [(jump * i, 1) for i in
                             range(self.GRAPH_TRACE_LEGEND_WIDTH)]
-
                 else:
-                    width = self.GRAPH_TRACE_LEGEND_WIDTH / count
+                    width = self.GRAPH_TRACE_LEGEND_WIDTH // count
                     remainder = self.GRAPH_TRACE_LEGEND_WIDTH % count
                     i_width = [(i, width + 1) for i in range(remainder)] + \
                             [(i, width) for i in range(remainder, count)]
@@ -260,7 +257,7 @@ class QInstruction(QGraphObject):
                     color = self.workspace.instance.trace.get_mark_color(self.insn.addr, i)
                     painter.setPen(color)
                     painter.setBrush(color)
-                    painter.drawRect(x_start, self.y, w, 30)
+                    painter.drawRect(x_start, self.y, w, self.height)
                     x_start += w
 
         # address

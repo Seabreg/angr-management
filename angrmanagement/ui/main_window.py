@@ -320,9 +320,8 @@ class MainWindow(QMainWindow):
         self.workspace.reload()
 
     def open_file_button(self):
-        # file_path = self._open_mainfile_dialog()
-        # self.load_file(file_path)
-        self.load_file('/home/tiffanyb/Angr/test/hamlin.bin')
+        file_path = self._open_mainfile_dialog()
+        self.load_file(file_path)
         self._file_menu.action_by_key('load_trace').enable()
 
     def open_docker_button(self):
@@ -346,9 +345,8 @@ class MainWindow(QMainWindow):
         self.workspace.instance.set_image(img_name)
 
     def open_trace(self):
-        # trace_path = self._open_trace_dialog()
-        # self.load_trace(trace_path)
-        self.load_trace('/home/tiffanyb/Angr/test/trace_real.json')
+        trace_path = self._open_trace_dialog()
+        self.load_trace(trace_path)
 
     def load_file(self, file_path):
         if os.path.isfile(file_path):
